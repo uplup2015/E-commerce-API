@@ -22,6 +22,10 @@ app.use('/api/products', productRoutes);
 app.use('/api/cart', cartRoutes);
 app.use('/api/orders', orderRoutes);
 
+app.use((_req, res) => {
+  res.status(404).json({ message: 'Route not found' });
+});
+
 app.use(errorHandler);
 
 export default app;
