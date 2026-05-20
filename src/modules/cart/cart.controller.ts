@@ -1,7 +1,7 @@
 import { NextFunction, Request, Response } from 'express';
-import * as cartService from '../services/cart.service';
-import { addItemSchema, updateItemSchema } from '../validators/cart.validator';
-import { ApiError } from '../utils/ApiError';
+import * as cartService from './cart.service';
+import { addItemSchema, updateItemSchema } from './cart.validator';
+import { ApiError } from '../../utils/ApiError';
 
 export async function getCartHandler(req: Request, res: Response, next: NextFunction) {
   try {

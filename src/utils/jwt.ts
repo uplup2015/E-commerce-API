@@ -9,6 +9,7 @@ interface AccessTokenPayload {
 
 interface RefreshTokenPayload {
   userId: number;
+  tokenId: string;
 }
 
 export function signAccessToken(payload: AccessTokenPayload): string {

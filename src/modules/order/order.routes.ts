@@ -1,12 +1,12 @@
 import { Router } from 'express';
-import { authenticate } from '../middlewares/authenticate';
-import { requireAdmin } from '../middlewares/requireAdmin';
+import { authenticate } from '../../middlewares/authenticate';
+import { requireAdmin } from '../../middlewares/requireAdmin';
 import {
   createOrderHandler,
   getOrdersHandler,
   getOrderByIdHandler,
   updateOrderStatusHandler,
-} from '../controllers/order.controller';
+} from './order.controller';
 
 const router = Router();
 

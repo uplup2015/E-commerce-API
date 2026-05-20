@@ -1,7 +1,11 @@
 import { NextFunction, Request, Response } from 'express';
-import * as productService from '../services/product.service';
-import { createProductSchema, updateProductSchema, productQuerySchema } from '../validators/product.validator';
-import { ApiError } from '../utils/ApiError';
+import * as productService from './product.service';
+import {
+  createProductSchema,
+  updateProductSchema,
+  productQuerySchema,
+} from './product.validator';
+import { ApiError } from '../../utils/ApiError';
 
 export async function createProductHandler(req: Request, res: Response, next: NextFunction) {
   try {

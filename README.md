@@ -7,6 +7,7 @@ A RESTful e-commerce backend built with Node.js, Express, TypeScript, and Postgr
 - **Runtime:** Node.js + Express.js + TypeScript
 - **Database:** PostgreSQL + Prisma ORM
 - **Auth:** JWT (access + refresh tokens) + bcrypt
+- **Security:** HTTP-only refresh cookies + Helmet + rate limiting
 - **Validation:** Joi
 - **Infrastructure:** Docker Compose
 
@@ -49,22 +50,75 @@ Server runs at `http://localhost:3000`
 |----------|-------------|
 | `DATABASE_URL` | PostgreSQL connection string |
 | `PORT` | Server port (default: 3000) |
+| `CORS_ORIGIN` | Frontend origin allowed to send credentialed requests |
 | `JWT_ACCESS_SECRET` | Secret for signing access tokens |
 | `JWT_REFRESH_SECRET` | Secret for signing refresh tokens |
 | `JWT_ACCESS_EXPIRES_IN` | Access token expiry (default: 15m) |
 | `JWT_REFRESH_EXPIRES_IN` | Refresh token expiry (default: 7d) |
 
+### Security Controls
+
+- Refresh tokens are stored as database hashes and delivered through HTTP-only cookies.
+- Refresh tokens rotate on every refresh; reuse of a revoked token revokes the user's active refresh sessions.
+- Helmet sets common defensive HTTP headers.
+- API routes use a general rate limiter, while auth routes use a stricter limiter for login/register/refresh attempts.
+- Production mode requires an explicit `CORS_ORIGIN` for credentialed browser requests.
+
 ---
 
 ## API Reference
+
+## Architecture
+
+The project has evolved from a purely layer-based structure toward domain modules:
+
+```text
+src/modules/auth/
+  auth.routes.ts
+  auth.controller.ts
+  auth.service.ts
+  auth.repository.ts
+  auth.validator.ts
+
+src/modules/cart/
+  cart.routes.ts
+  cart.controller.ts
+  cart.service.ts
+  cart.repository.ts
+  cart.validator.ts
+
+src/modules/category/
+  category.routes.ts
+  category.controller.ts
+  category.service.ts
+  category.repository.ts
+  category.validator.ts
+
+src/modules/order/
+  order.routes.ts
+  order.controller.ts
+  order.service.ts
+  order.repository.ts
+  order.validator.ts
+
+src/modules/product/
+  product.routes.ts
+  product.controller.ts
+  product.service.ts
+  product.repository.ts
+  product.validator.ts
+```
+
+Shared infrastructure such as config, Prisma, middleware, errors, and utilities remains outside modules.
 
 ### Auth
 
 | Method | Endpoint | Auth | Description |
 |--------|----------|------|-------------|
 | POST | `/api/auth/register` | — | Register a new user |
-| POST | `/api/auth/login` | — | Login and receive tokens |
-| POST | `/api/auth/refresh` | — | Refresh access token |
+| POST | `/api/auth/login` | — | Login and receive access token |
+| POST | `/api/auth/refresh` | — | Rotate refresh cookie and receive new access token |
+| POST | `/api/auth/logout` | — | Revoke refresh cookie |
 
 **Register** `POST /api/auth/register`
 ```json
@@ -74,10 +128,11 @@ Server runs at `http://localhost:3000`
 // Response 201
 {
   "user": { "id": 1, "name": "John", "email": "john@example.com", "role": "CUSTOMER" },
-  "accessToken": "...",
-  "refreshToken": "..."
+  "accessToken": "..."
 }
 ```
+
+The refresh token is sent as an HTTP-only cookie.
 
 **Login** `POST /api/auth/login`
 ```json
@@ -87,18 +142,29 @@ Server runs at `http://localhost:3000`
 // Response 200
 {
   "user": { "id": 1, "name": "John", "email": "john@example.com", "role": "CUSTOMER" },
-  "accessToken": "...",
-  "refreshToken": "..."
+  "accessToken": "..."
 }
 ```
+
+The refresh token is sent as an HTTP-only cookie.
 
 **Refresh** `POST /api/auth/refresh`
 ```json
 // Request
-{ "refreshToken": "..." }
+// No body required when the refreshToken cookie is present
 
 // Response 200
-{ "accessToken": "...", "refreshToken": "..." }
+{ "accessToken": "..." }
+```
+
+Refresh tokens are stored as hashes in the database and rotated on every refresh. Reusing an already-revoked refresh token revokes the user's active refresh tokens. The request body may still include `refreshToken` for API-client testing, but browser clients should use the HTTP-only cookie.
+
+**Logout** `POST /api/auth/logout`
+```json
+// Request
+// No body required when the refreshToken cookie is present
+
+// Response 204 No Content
 ```
 
 ---

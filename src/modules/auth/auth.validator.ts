@@ -12,5 +12,9 @@ export const loginSchema = Joi.object({
 });
 
 export const refreshSchema = Joi.object({
-  refreshToken: Joi.string().required(),
+  refreshToken: Joi.string().optional(),
+});
+
+export const logoutSchema = Joi.object({
+  refreshToken: Joi.string().optional(),
 });

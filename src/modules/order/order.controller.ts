@@ -1,8 +1,8 @@
 import { NextFunction, Request, Response } from 'express';
-import * as orderService from '../services/order.service';
-import { updateStatusSchema } from '../validators/order.validator';
-import { ApiError } from '../utils/ApiError';
 import { OrderStatus } from '@prisma/client';
+import * as orderService from './order.service';
+import { updateStatusSchema } from './order.validator';
+import { ApiError } from '../../utils/ApiError';
 
 export async function createOrderHandler(req: Request, res: Response, next: NextFunction) {
   try {

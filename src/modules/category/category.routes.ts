@@ -1,12 +1,12 @@
 import { Router } from 'express';
-import { authenticate } from '../middlewares/authenticate';
-import { requireAdmin } from '../middlewares/requireAdmin';
+import { authenticate } from '../../middlewares/authenticate';
+import { requireAdmin } from '../../middlewares/requireAdmin';
 import {
   createCategoryHandler,
   getCategoriesHandler,
   updateCategoryHandler,
   deleteCategoryHandler,
-} from '../controllers/category.controller';
+} from './category.controller';
 
 const router = Router();
 

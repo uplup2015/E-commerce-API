@@ -1,7 +1,7 @@
 import { Prisma } from '@prisma/client';
-import prisma from '../config/prisma';
-import { ApiError } from '../utils/ApiError';
-import { getPaginationParams, buildPaginationMeta } from '../utils/pagination';
+import { ApiError } from '../../utils/ApiError';
+import { getPaginationParams, buildPaginationMeta } from '../../utils/pagination';
+import * as productRepository from './product.repository';
 
 interface CreateProductData {
   title: string;
@@ -19,13 +19,10 @@ interface ProductQuery {
 }
 
 export async function createProduct(data: CreateProductData) {
-  const category = await prisma.category.findUnique({ where: { id: data.categoryId } });
+  const category = await productRepository.findCategoryById(data.categoryId);
   if (!category) throw ApiError.notFound('Category not found');
 
-  return prisma.product.create({
-    data,
-    include: { category: { select: { id: true, name: true } } },
-  });
+  return productRepository.createProduct(data);
 }
 
 export async function getProducts(query: ProductQuery) {
@@ -37,16 +34,7 @@ export async function getProducts(query: ProductQuery) {
     ...(categoryId && { categoryId }),
   };
 
-  const [products, total] = await prisma.$transaction([
-    prisma.product.findMany({
-      where,
-      skip,
-      take,
-      include: { category: { select: { id: true, name: true } } },
-      orderBy: { id: 'desc' },
-    }),
-    prisma.product.count({ where }),
-  ]);
+  const [products, total] = await productRepository.findProducts(where, skip, take);
 
   return {
     data: products,
@@ -55,33 +43,26 @@ export async function getProducts(query: ProductQuery) {
 }
 
 export async function getProductById(id: number) {
-  const product = await prisma.product.findUnique({
-    where: { id },
-    include: { category: { select: { id: true, name: true } } },
-  });
+  const product = await productRepository.findProductById(id);
   if (!product) throw ApiError.notFound('Product not found');
   return product;
 }
 
 export async function updateProduct(id: number, data: Partial<CreateProductData>) {
-  const product = await prisma.product.findUnique({ where: { id } });
+  const product = await productRepository.findProductById(id);
   if (!product) throw ApiError.notFound('Product not found');
 
   if (data.categoryId) {
-    const category = await prisma.category.findUnique({ where: { id: data.categoryId } });
+    const category = await productRepository.findCategoryById(data.categoryId);
     if (!category) throw ApiError.notFound('Category not found');
   }
 
-  return prisma.product.update({
-    where: { id },
-    data,
-    include: { category: { select: { id: true, name: true } } },
-  });
+  return productRepository.updateProduct(id, data);
 }
 
 export async function deleteProduct(id: number) {
-  const product = await prisma.product.findUnique({ where: { id } });
+  const product = await productRepository.findProductById(id);
   if (!product) throw ApiError.notFound('Product not found');
 
-  return prisma.product.delete({ where: { id } });
+  return productRepository.deleteProduct(id);
 }

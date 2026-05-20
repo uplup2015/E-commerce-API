@@ -1,7 +1,7 @@
 import { NextFunction, Request, Response } from 'express';
-import * as categoryService from '../services/category.service';
-import { createCategorySchema, updateCategorySchema } from '../validators/category.validator';
-import { ApiError } from '../utils/ApiError';
+import * as categoryService from './category.service';
+import { createCategorySchema, updateCategorySchema } from './category.validator';
+import { ApiError } from '../../utils/ApiError';
 
 export async function createCategoryHandler(req: Request, res: Response, next: NextFunction) {
   try {
