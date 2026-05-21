@@ -23,6 +23,13 @@ export function findUserById(id: number) {
   return prisma.user.findUnique({ where: { id } });
 }
 
+export function findPublicUserById(id: number) {
+  return prisma.user.findUnique({
+    where: { id },
+    select: { id: true, name: true, email: true, role: true },
+  });
+}
+
 export function createUser(data: CreateUserData) {
   return prisma.user.create({
     data,

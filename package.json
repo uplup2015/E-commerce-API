@@ -4,19 +4,38 @@
   "description": "E-commerce REST API built with Node.js, Express, TypeScript, and PostgreSQL",
   "main": "dist/server.js",
   "scripts": {
-    "dev": "ts-node-dev --respawn --transpile-only src/server.ts",
+    "dev": "ts-node-dev --respawn --transpile-only backend/src/server.ts",
+    "dev:app": "concurrently -k -n backend,frontend -c cyan,green \"npm run dev\" \"npm run frontend:dev\"",
+    "dev:full": "docker compose up -d && concurrently -k -n backend,frontend -c cyan,green \"npm run dev\" \"npm run frontend:dev\"",
     "build": "tsc",
+    "start:prod": "prisma migrate deploy && node dist/server.js",
+    "frontend:dev": "vite --config frontend/vite.config.ts",
+    "frontend:build": "tsc -p frontend/tsconfig.json && vite build --config frontend/vite.config.ts",
+    "frontend:preview": "vite preview --config frontend/vite.config.ts",
     "test": "jest --runInBand",
     "start": "node dist/server.js",
     "prisma:generate": "prisma generate",
-    "prisma:migrate": "prisma migrate dev"
+    "prisma:migrate": "prisma migrate dev",
+    "prisma:deploy": "prisma migrate deploy",
+    "prisma:seed": "node prisma/seed.js"
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
   "dependencies": {
+    "@hookform/resolvers": "^5.2.2",
     "@prisma/client": "^6.0.0",
+    "@radix-ui/react-alert-dialog": "^1.1.15",
+    "@radix-ui/react-dialog": "^1.1.15",
+    "@radix-ui/react-label": "^2.1.8",
+    "@radix-ui/react-select": "^2.2.6",
+    "@radix-ui/react-slot": "^1.2.4",
+    "@radix-ui/react-toast": "^1.2.15",
+    "@tanstack/react-query": "^5.100.11",
+    "axios": "^1.16.1",
     "bcrypt": "^6.0.0",
+    "class-variance-authority": "^0.7.1",
+    "clsx": "^2.1.1",
     "cookie-parser": "^1.4.7",
     "cors": "^2.8.6",
     "dotenv": "^16.4.5",
@@ -24,7 +43,18 @@
     "express-rate-limit": "^8.5.2",
     "helmet": "^8.1.0",
     "joi": "^17.13.3",
-    "jsonwebtoken": "^9.0.2"
+    "jsonwebtoken": "^9.0.2",
+    "lucide-react": "^1.16.0",
+    "react": "^19.2.6",
+    "react-dom": "^19.2.6",
+    "react-hook-form": "^7.76.0",
+    "react-router-dom": "^7.15.1",
+    "tailwind-merge": "^3.6.0",
+    "tailwindcss-animate": "^1.0.7",
+    "zod": "^4.4.3"
+  },
+  "prisma": {
+    "seed": "node prisma/seed.js"
   },
   "devDependencies": {
     "@types/bcrypt": "^5.0.2",
@@ -34,12 +64,20 @@
     "@types/jest": "^30.0.0",
     "@types/jsonwebtoken": "^9.0.6",
     "@types/node": "^20.14.0",
+    "@types/react": "^19.2.15",
+    "@types/react-dom": "^19.2.3",
     "@types/supertest": "^7.2.0",
+    "@vitejs/plugin-react": "^6.0.2",
+    "autoprefixer": "^10.5.0",
+    "concurrently": "^9.2.1",
     "jest": "^30.4.2",
+    "postcss": "^8.5.15",
     "prisma": "^6.0.0",
     "supertest": "^7.2.2",
+    "tailwindcss": "^3.4.17",
     "ts-jest": "^29.4.10",
     "ts-node-dev": "^2.0.0",
-    "typescript": "^5.4.5"
+    "typescript": "^5.4.5",
+    "vite": "^8.0.14"
   }
 }

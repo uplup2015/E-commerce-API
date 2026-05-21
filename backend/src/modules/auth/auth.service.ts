@@ -100,6 +100,12 @@ export async function logout(refreshToken: string) {
   await authRepository.revokeRefreshToken(payload.tokenId);
 }
 
+export async function getCurrentUser(userId: number) {
+  const user = await authRepository.findPublicUserById(userId);
+  if (!user) throw ApiError.unauthorized('User not found');
+  return user;
+}
+
 async function generateTokens(
   userId: number,
   role: import('@prisma/client').Role,

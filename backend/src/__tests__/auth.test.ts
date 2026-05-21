@@ -10,6 +10,37 @@ async function deleteUserByEmail(email: string) {
 }
 
 describe('auth integration', () => {
+  it('returns the current authenticated user without sensitive fields', async () => {
+    const email = `auth-test-${uniqueId()}@example.com`;
+
+    try {
+      const registerResponse = await request(app)
+        .post('/api/auth/register')
+        .send({ name: 'Auth Test', email, password: testPassword })
+        .expect(201);
+
+      const response = await request(app)
+        .get('/api/auth/me')
+        .set('Authorization', `Bearer ${registerResponse.body.accessToken}`)
+        .expect(200);
+
+      expect(response.body).toMatchObject({
+        id: registerResponse.body.user.id,
+        name: 'Auth Test',
+        email,
+        role: 'CUSTOMER',
+      });
+      expect(response.body.password).toBeUndefined();
+      expect(response.body.refreshTokens).toBeUndefined();
+    } finally {
+      await deleteUserByEmail(email);
+    }
+  });
+
+  it('rejects current user lookup without an access token', async () => {
+    await request(app).get('/api/auth/me').expect(401);
+  });
+
   it('registers a user, returns an access token, and sets an HTTP-only refresh cookie', async () => {
     const email = `auth-test-${uniqueId()}@example.com`;
 

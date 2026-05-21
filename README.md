@@ -68,40 +68,108 @@ Server runs at `http://localhost:3000`
 
 ## API Reference
 
+## Deployment
+
+Docker is only used for local PostgreSQL. In production, use a managed PostgreSQL database from
+Render, Railway, Neon, Supabase, or a similar provider.
+
+### Backend on Render
+
+This repo includes `render.yaml`, which can create:
+
+- a Node web service for the API
+- a managed PostgreSQL database
+
+Render build command:
+
+```bash
+npm install && npx prisma generate && npm run build
+```
+
+Render start command:
+
+```bash
+npm run start:prod
+```
+
+Required backend environment variables:
+
+```env
+DATABASE_URL=your_managed_postgres_connection_string
+NODE_ENV=production
+PORT=3000
+CORS_ORIGIN=https://your-frontend-domain.vercel.app
+JWT_ACCESS_SECRET=replace_with_a_long_random_secret
+JWT_REFRESH_SECRET=replace_with_another_long_random_secret
+JWT_ACCESS_EXPIRES_IN=15m
+JWT_REFRESH_EXPIRES_IN=7d
+```
+
+After the backend is deployed, seed the production database once:
+
+```bash
+npm run prisma:seed
+```
+
+### Frontend on Vercel
+
+This repo includes `vercel.json` for the Vite frontend.
+
+Vercel build command:
+
+```bash
+npm run frontend:build
+```
+
+Vercel output directory:
+
+```text
+dist-frontend
+```
+
+Required frontend environment variable:
+
+```env
+VITE_API_BASE_URL=https://your-backend-domain.onrender.com/api
+```
+
+The backend uses secure cross-site cookies in production (`SameSite=None; Secure`) so refresh-token
+cookies work when the frontend and backend are deployed on different domains.
+
 ## Architecture
 
 The project has evolved from a purely layer-based structure toward domain modules:
 
 ```text
-src/modules/auth/
+backend/src/modules/auth/
   auth.routes.ts
   auth.controller.ts
   auth.service.ts
   auth.repository.ts
   auth.validator.ts
 
-src/modules/cart/
+backend/src/modules/cart/
   cart.routes.ts
   cart.controller.ts
   cart.service.ts
   cart.repository.ts
   cart.validator.ts
 
-src/modules/category/
+backend/src/modules/category/
   category.routes.ts
   category.controller.ts
   category.service.ts
   category.repository.ts
   category.validator.ts
 
-src/modules/order/
+backend/src/modules/order/
   order.routes.ts
   order.controller.ts
   order.service.ts
   order.repository.ts
   order.validator.ts
 
-src/modules/product/
+backend/src/modules/product/
   product.routes.ts
   product.controller.ts
   product.service.ts
@@ -109,7 +177,7 @@ src/modules/product/
   product.validator.ts
 ```
 
-Shared infrastructure such as config, Prisma, middleware, errors, and utilities remains outside modules.
+Shared infrastructure such as config, Prisma, middleware, errors, and utilities remains in `backend/src` outside modules.
 
 ### Auth
 
@@ -119,6 +187,7 @@ Shared infrastructure such as config, Prisma, middleware, errors, and utilities 
 | POST | `/api/auth/login` | — | Login and receive access token |
 | POST | `/api/auth/refresh` | — | Rotate refresh cookie and receive new access token |
 | POST | `/api/auth/logout` | — | Revoke refresh cookie |
+| GET | `/api/auth/me` | User | Get current authenticated user |
 
 **Register** `POST /api/auth/register`
 ```json
@@ -165,6 +234,15 @@ Refresh tokens are stored as hashes in the database and rotated on every refresh
 // No body required when the refreshToken cookie is present
 
 // Response 204 No Content
+```
+
+**Me** `GET /api/auth/me`
+```json
+// Headers
+Authorization: Bearer <accessToken>
+
+// Response 200
+{ "id": 1, "name": "John", "email": "john@example.com", "role": "CUSTOMER" }
 ```
 
 ---

@@ -1,4 +1,5 @@
 import { NextFunction, Request, Response } from 'express';
+import type { CookieOptions } from 'express';
 import * as authService from './auth.service';
 import { env } from '../../config/env';
 import {
@@ -58,6 +59,15 @@ export async function refreshHandler(req: Request, res: Response, next: NextFunc
   }
 }
 
+export async function meHandler(req: Request, res: Response, next: NextFunction) {
+  try {
+    const user = await authService.getCurrentUser(req.user!.id);
+    res.json(user);
+  } catch (err) {
+    next(err);
+  }
+}
+
 function getTokenMetadata(req: Request) {
   return {
     userAgent: req.get('user-agent'),
@@ -73,21 +83,24 @@ function getRefreshToken(req: Request, bodyToken?: string) {
 
 function setRefreshTokenCookie(res: Response, refreshToken: string) {
   res.cookie(REFRESH_TOKEN_COOKIE, refreshToken, {
-    httpOnly: true,
-    secure: env.nodeEnv === 'production',
-    sameSite: 'lax',
+    ...refreshTokenCookieOptions(),
     maxAge: parseDurationMs(env.jwt.refreshExpiresIn),
-    path: '/api/auth',
   });
 }
 
 function clearRefreshTokenCookie(res: Response) {
-  res.clearCookie(REFRESH_TOKEN_COOKIE, {
+  res.clearCookie(REFRESH_TOKEN_COOKIE, refreshTokenCookieOptions());
+}
+
+function refreshTokenCookieOptions(): CookieOptions {
+  const isProduction = env.nodeEnv === 'production';
+
+  return {
     httpOnly: true,
-    secure: env.nodeEnv === 'production',
-    sameSite: 'lax',
+    secure: isProduction,
+    sameSite: isProduction ? 'none' : 'lax',
     path: '/api/auth',
-  });
+  };
 }
 
 function toAuthResponse<T extends { refreshToken: string }>(result: T) {
